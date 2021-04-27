@@ -218,7 +218,7 @@ class CloudOfTextRectangle:
 		return(CloudOfTextRectangle(new_config))
 	
 		
-	def treat_conflicts(self, parent_nodes_conflicts):
+	def treat_conflicts(self, parent_nodes_conflicts, cpt):
 		"""
 		input : empty list. Needed for recursion.
 		output : a tree of resolved conflicts in the form of
@@ -241,32 +241,55 @@ class CloudOfTextRectangle:
 		
 		n_conflict = len(self.conflicts)
 		# stop condition to recursion --> no conflict in the cloud
-		if n_conflict == 0:
+		if n_conflict == 0 or cpt > 3 :
 			return({"parent": self, "childrens": None})
 		parent_nodes_conflicts.append(self.conflicts)
+		n_min = min([len(c) for c in parent_nodes_conflicts])
+		#print("parent_nodes_conflicts:")
+		#print(parent_nodes_conflicts)
 		configs = []
 		first_conflict = self.conflicts[0]
 		for s in [1, 2, 3, 4]:
 			configs.append(self.new_config_cloud(first_conflict[0], s))
 			configs.append(self.new_config_cloud(first_conflict[1], s))
-		new_configs = [c for c in configs if (c.conflicts not in 
-					parent_nodes_conflicts) and (len(c.conflicts)<= n_conflict)]
+		new_configs_better = [c for c in configs if 
+				(c.conflicts not in parent_nodes_conflicts) 
+						and (len(c.conflicts) < n_min)]
+		new_configs_even = [c for c in configs if 
+				(c.conflicts not in parent_nodes_conflicts) 
+						and (len(c.conflicts) == n_min)]
+		#new_configs_better = [c for c in configs if 
+		#		(c.conflicts not in parent_nodes_conflicts) 
+		#				and (len(c.conflicts) < n_conflict)]
+		#new_configs_even = [c for c in configs if 
+		#		(c.conflicts not in parent_nodes_conflicts) 
+		#				and (len(c.conflicts) == n_conflict)]
+		# size limitation to four childrens
+		new_configs = new_configs_better + new_configs_even[:max(0, 4-len(new_configs_better))]
+		#print("new_config")
+		#print([c.conflicts for c in new_configs])
 		# second stop condition : no more config not explored and
 		# no config found with new conflict to treat
 		if len(new_configs) == 0:
 			return({"parent": self, "childrens": None})
-		childrens = [c.treat_conflicts(parent_nodes_conflicts) for c in 
-															new_configs]
+		# compteur qui compte les tentatives "infructeurses completes de trouver
+		# un sous chemin meilleurs. L'objectif est d'éviter les boucles trop goourmandes 
+		# en calcul
+		if sum([len(c.conflicts) == n_conflict for c in new_configs]) == len(new_configs):
+			cpt += 1
+		else:
+			cpt = 0
+		childrens = [c.treat_conflicts(parent_nodes_conflicts, cpt) for c in new_configs]
 		return({"parent": self, "childrens": childrens})
 	
 	# main function to arrange texts using treat_conflicts result	
 	def arrange_text(self):
-		resolve_conflicts_tree = self.treat_conflicts([])
+		resolve_conflicts_tree = self.treat_conflicts([], cpt=0)
 		def get_tree_leaves(tree):
 			if not isinstance(tree, dict):
 				raise TypeError("input must be dict")
 			if tree["childrens"] is None:
-				return(tree["parent"])
+				return([tree["parent"]])
 			else:
 				return([get_tree_leaves(c) for c in tree["childrens"]])
 		tree_leaves = get_tree_leaves(resolve_conflicts_tree)
@@ -397,8 +420,8 @@ def test_class_cloud():
 	cloud1 = CloudOfTextRectangle([tr1, tr2, tr3])
 	cloud2 = CloudOfTextRectangle([tr1, tr2, tr3, tr4, tr5, tr6])
 	# resolve conflicts
-	resolve_conflicts_tree1 = cloud1.treat_conflicts([])
-	resolve_conflicts_tree2 = cloud2.treat_conflicts([])
+	resolve_conflicts_tree1 = cloud1.treat_conflicts([], 0)
+	resolve_conflicts_tree2 = cloud2.treat_conflicts([], 0)
 	# arrange_text
 	cloud2.conflicts
 	cloud2.arrange_text()
