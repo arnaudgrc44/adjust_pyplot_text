@@ -283,7 +283,17 @@ class CloudOfTextRectangle:
 		return({"parent": self, "childrens": childrens})
 	
 	# main function to arrange texts using treat_conflicts result	
-	def arrange_text(self):
+	def arrange_text(self, arrows=False):
+		if arrows:
+			for i, tr in enumerate(self.list_tr):
+				if tr.r.x1[0] >= 0 and tr.r.x1[1] >= 0:
+					pass
+				if tr.r.x1[0] < 0 and tr.r.x1[1] >= 0:
+					self.list_tr[i].change_state(2)
+				if tr.r.x1[0] >= 0 and tr.r.x1[1] < 0:
+					self.list_tr[i].change_state(3)
+				if tr.r.x1[0] < 0 and tr.r.x1[1] < 0:
+					self.list_tr[i].change_state(4)
 		resolve_conflicts_tree = self.treat_conflicts([], cpt=0)
 		def get_tree_leaves(tree):
 			if not isinstance(tree, dict):
@@ -322,33 +332,29 @@ def make_text_rectangle(xy, text, marge, x_scope, y_scope, coef=1):
 	# rescale the character's size to the targeted figure scale.
 	scale_x = x_scope/16
 	h = y_scope/16 * 0.3
-	sizing_dict = {"a": 0.1, "b": 0.1, "c": 0.09, "d": 0.1, "e": 0.1, "f": 0.06,
-				"g": 0.1, "h": 0.1, "i": 0.05, "j": 0.05, "h": 0.1, "l": 0.05,
-				"m": 0.14, "n": 0.1, "o": 0.1, "p": 0.1, "q": 0.1, "r": 0.075,
-				"s": 0.09, "t": 0.06, "u": 0.1, "v": 0.1, "w": 0.12, "x":0.1,
-				"y": 0.1, "z": 0.09, "_": 0.08, "'": 0.05, "1": 0.1, "2": 0.1,
-				"3": 0.1, "4": 0.1, "5": 0.1, "6": 0.1, "7": 0.1, "8": 0.1,
-				"9": 0.1, "0": 0.1}
-	for key in sizing_dict.keys():
-		sizing_dict[key]*=(scale_x*coef)
+	sizing_dict = {"a": 0.1, "b": 0.1, "c": 0.09, "d": 0.1, "e": 0.1, "f": 0.06, "g": 0.1, "h": 0.1, "i": 0.05, "j": 0.05, "h": 0.1, "l": 0.05, "m": 0.14, "n": 0.1, "o": 0.1, "p": 0.1, "q": 0.1, "r": 0.075, "s": 0.09, "t": 0.06, "u": 0.1, "v": 0.1, "w": 0.12, "x":0.1, "y": 0.1, "z": 0.09, "_": 0.08, "'": 0.05, "1": 0.1, "2": 0.1, "3": 0.1, "4": 0.1, "5": 0.1, "6": 0.1, "7": 0.1, "8": 0.1, "9": 0.1, "0": 0.1}
 	l = 0
 	for c in text.lower():
 		if c not in list(sizing_dict.keys()):
 			#raise ValueError("character {} in text not recognize by sizing\
 #dict. Only lower character without accent are accepted, and only _ and ' are\
 #accepted for punctuation".format(c))
-			l += 0.1
+			l += 0.1 
 		else:
 			l += sizing_dict[c]
+	l*=(scale_x * coef)
 	#print("text : {0}, size : {1}".format(text, str(l)))
 	return(TextRectangle(Rectangle(xy + marge, l, h), 1, marge))
 
 
-def adjust_text(ax, add_marge=True):
+def adjust_text(ax, add_marge=True, arrows=False):
 	if len(ax.texts) == 0:
 		return(0)	
 	x_scope = ax.viewLim.xmax - ax.viewLim.xmin
 	y_scope = ax.viewLim.ymax - ax.viewLim.ymin
+	# if the axis aspect is set to equal to keep proportion (for cercle) for example, the x_scope is going to be multiply by two when we will enlarge 
+	if ax.get_aspect() == "equal":
+		x_scope *= 2
 	if add_marge:
 		marge = np.array([x_scope, y_scope])/400
 	else:
@@ -358,7 +364,7 @@ def adjust_text(ax, add_marge=True):
 		list_tr.append(make_text_rectangle(np.array(text.xyann),\
 							text.get_text(), marge,  x_scope, y_scope))
 	cloud = CloudOfTextRectangle(list_tr)
-	cloud.arrange_text()
+	cloud.arrange_text(arrows)
 	for i in range(len(ax.texts)):
 		tr = cloud.list_tr[i]
 		ax.texts[i].set_x(tr.r.x1[0])
