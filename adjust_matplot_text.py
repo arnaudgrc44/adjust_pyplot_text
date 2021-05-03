@@ -323,26 +323,30 @@ class CloudOfTextRectangle:
 #sorted_leaves = sorted(tree_leaves, key=lambda x: len(x.value.conflicts), reverse=False)
 
 
-def make_text_rectangle(xy, text, marge, x_scope, y_scope, coef=1):
+def make_text_rectangle(xy, text, marge, ax, coef=1):
 	"""function to create text rectangle from xy coordonnee and text to print.
 	Added a coef to balance output for some reason"""
 	if not isinstance(text, str):
 		raise TypeError("text input must be str")
-	# as we compute character size in a x_scope of length 16, we have to
-	# rescale the character's size to the targeted figure scale.
-	scale_x = x_scope/16
-	h = y_scope/16 * 0.3
-	sizing_dict = {"a": 0.1, "b": 0.1, "c": 0.09, "d": 0.1, "e": 0.1, "f": 0.06, "g": 0.1, "h": 0.1, "i": 0.05, "j": 0.05, "h": 0.1, "l": 0.05, "m": 0.14, "n": 0.1, "o": 0.1, "p": 0.1, "q": 0.1, "r": 0.075, "s": 0.09, "t": 0.06, "u": 0.1, "v": 0.1, "w": 0.12, "x":0.1, "y": 0.1, "z": 0.09, "_": 0.08, "'": 0.05, "1": 0.1, "2": 0.1, "3": 0.1, "4": 0.1, "5": 0.1, "6": 0.1, "7": 0.1, "8": 0.1, "9": 0.1, "0": 0.1}
+	x_scope = ax.get_xlim()[1] - ax.get_xlim()[0]
+	y_scope = ax.get_ylim()[1] - ax.get_ylim()[0]
+	figwidth = ax.get_figure().get_figwidth()
+	figheight = ax.get_figure().get_figheight()
+	sizing_dict = {"default": 1.1, "a": 1.1, "b": 1.1, "c": 1, "d": 1.1, "e": 1.1, "f": 0.65, "g": 1.1, "h": 1.1, "i": 0.55, "j": 0.55, "k": 1.1, "l": 0.55, "m": 1.54, "n": 1.1, "o": 1.1, "p": 1.1, "q": 1.1, "r": 0.825, "s": 1, "t": 0.65, "u": 1.1, "v": 1.1, "w": 1.3, "x":1.1, "y": 1.1, "z": 1, "_": 0.9, "'": 0.55, "1": 1.15, "2": 1.15, "3": 1.15, "4": 1.15, "5": 1.15, "6": 1.15, "7": 1.15, "8": 1.15, "9": 1.15, "0": 1.15}
+	# as we compute character size in a x_scope of length 16 and figwidth of 10
+	#, we have to rescale the character's size to the targeted figure scale.
+	for key in sizing_dict.keys():
+		sizing_dict[key] = sizing_dict[key] * x_scope / (figwidth * 10)
+	h = 1.5 * x_scope / (figwidth * 10)
 	l = 0
 	for c in text.lower():
 		if c not in list(sizing_dict.keys()):
 			#raise ValueError("character {} in text not recognize by sizing\
 #dict. Only lower character without accent are accepted, and only _ and ' are\
 #accepted for punctuation".format(c))
-			l += 0.1 
+			l += sizing_dict["default"]
 		else:
 			l += sizing_dict[c]
-	l*=(scale_x * coef)
 	#print("text : {0}, size : {1}".format(text, str(l)))
 	return(TextRectangle(Rectangle(xy + marge, l, h), 1, marge))
 
@@ -350,19 +354,21 @@ def make_text_rectangle(xy, text, marge, x_scope, y_scope, coef=1):
 def adjust_text(ax, add_marge=True, arrows=False):
 	if len(ax.texts) == 0:
 		return(0)	
-	x_scope = ax.viewLim.xmax - ax.viewLim.xmin
-	y_scope = ax.viewLim.ymax - ax.viewLim.ymin
 	# if the axis aspect is set to equal to keep proportion (for cercle) for example, the x_scope is going to be multiply by two when we will enlarge 
-	if ax.get_aspect() == "equal":
-		x_scope *= 2
+	#if ax.get_aspect() == "equal":
+	#	x_scope *= 2
+	x_scope = ax.get_xlim()[1] - ax.get_xlim()[0]
+	y_scope = ax.get_ylim()[1] - ax.get_ylim()[0]
+	figwidth = ax.get_figure().get_figwidth()
+	figheight = ax.get_figure().get_figheight()
 	if add_marge:
-		marge = np.array([x_scope, y_scope])/400
+		marge = np.array([x_scope/figwidth, y_scope/figheight]) / 10
 	else:
 		marge = np.array([0, 0])
 	list_tr = []
 	for text in ax.texts:
 		list_tr.append(make_text_rectangle(np.array(text.xyann),\
-							text.get_text(), marge,  x_scope, y_scope))
+							text.get_text(), marge, ax))
 	cloud = CloudOfTextRectangle(list_tr)
 	cloud.arrange_text(arrows)
 	for i in range(len(ax.texts)):

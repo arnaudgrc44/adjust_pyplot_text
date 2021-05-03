@@ -2,7 +2,7 @@
 
 Arrange annotation text in pyplot, in order to avoid as much as possible overlapping.
 
---> it's design to be helpful when the window's figure is enlarged at the maximum
+--> not designed to be efficient when enlarging the window/zooming
 
 
 before :
