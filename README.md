@@ -1,9 +1,10 @@
 ### adjust_matplot_text
 
-Arrange annotation text in pyplot, in order to avoid as much as possible overlapping.
+Arrange annotation text in pyplot, in order to avoid as much as possible overlapping.and also for mapping with arrows to be cleaner
 
 --> not designed to be efficient when enlarging the window/zooming
 
+Example for a scatter plot:
 
 before :
 
@@ -13,7 +14,19 @@ after :
 
 ![caption](/media/example_after.png)
 
-code of example :
+
+And an example for a plot with arrows :
+
+before :
+
+![caption](/media/with_arrows_example_before.png)
+
+after :
+
+![caption](/media/with_arrows_example_after.png)
+
+
+code of first example :
 ```
 from adjust_matplot_text import *
 
