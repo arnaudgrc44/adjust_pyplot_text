@@ -28,7 +28,7 @@ after :
 
 code of first example :
 ```
-from adjust_matplot_text import *
+import adjust_matplot_text
 
 def example(adjust = False):
 	np.random.seed(0)
@@ -51,9 +51,14 @@ def example(adjust = False):
 		ann = txt
 		ax.annotate(ann, xy=(x[i], y[i]), xytext=(x[i], y[i]))
 	if adjust:
-		adjust_text(ax)
+		adjust_matplot_text.adjust_text(ax)
 	plt.show()
 
 #example(False)
 #example(True)
+```
+
+for a plot with arrows just add arrows=True argument
+```
+adjust_matplot_text.adjust_text(ax, arrows=True)
 ```
