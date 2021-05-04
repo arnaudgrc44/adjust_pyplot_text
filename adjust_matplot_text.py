@@ -362,7 +362,7 @@ def adjust_text(ax, add_marge=True, arrows=False):
 	figwidth = ax.get_figure().get_figwidth()
 	figheight = ax.get_figure().get_figheight()
 	if add_marge:
-		marge = np.array([x_scope/figwidth, y_scope/figheight]) / 10
+		marge = np.array([x_scope/figwidth, y_scope/figheight]) / 15
 	else:
 		marge = np.array([0, 0])
 	list_tr = []
